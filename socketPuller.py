@@ -1,10 +1,18 @@
+import json
 import socket
+from contextlib import closing
+from pprint import pprint
 
 HOST = 'bigtv.local'
 PORT = 6500
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST,PORT))
-while 1:
-    data = client_socket.recv(4096)
-    print "RECIEVED:" , data
+with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+    s.connect((HOST,PORT))
+    with closing(s.makefile()) as f: #NOTE: closed independently
+        for line in f:
+            print line
+            try:
+                d = json.loads( line.strip('\n') )
+                pprint(d)
+            except:
+                pass
