@@ -4,6 +4,7 @@ import socket
 import json
 import functools
 import errno
+import random
 
 HOST = 'bigtv.local'
 PORT = 6500
@@ -12,12 +13,27 @@ global stream
 
 connections = []
 
+last_segment = {}
+msgs = [
+{'action':'beat'},
+{'action':'bar'},
+{'action': 'flash'},
+{'action':'section'},
+{'action':'segment'},
+]
+
+def handle_data(data_block):
+    # send segment
+    return random.choice(msgs)
+    # whwn to send bar, beat, flash?
+    
+    
 def on_data(data):
     #j = json.loads(data)
     j = data
     print data
     for c in connections:
-        c.write(json.dumps(j))
+        c.write(json.dumps(handle_data(j)))
     stream.read_until('\n', on_data)
 
 def handle_connection(connection, address):
