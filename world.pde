@@ -1,28 +1,14 @@
-// AUTHOR: <a href=mailto:williams.tyler@gmail.com>Tyler Williams</a>
-
-/*BEGIN_DOCSTRING 
-
-<p>
-[*heavily* inspired by <a href=http://9elements.com/io/projects/html5/canvas/>http://9elements.com/io/projects/html5/canvas/</a>]
-<br>
-</p>
-<br>
-<p>
-<b>World</b> creates hundreds of particles, like planets in space, which you fly through in time with the music. Section changes become scene changes, and segment changes are applied to all particles. Watch long enough and you'll see cool shapes start to appear...
-</p>
-END_DOCSTRING*/
-import processing.net.*; 
+import processing.net.*;
+import org.json.*;
 Client myClient; 
 String socketBuffer;
-//Processing.exports = {};
-//Processing.exports.star = Star;
-//Processing.exports.controller = Controller;
 
 int numParticles = 200;
 int impulsX = 0;
 int impulsY = 0;
 int impulsToX = 0;
 int impulsToY = 0;
+
 //var last_segment = null;
 //var last_section = null;
 //var last_bar = null;
@@ -227,6 +213,39 @@ class Controller {
 	}
 }
 
+void handlePacket(String raw_string) {
+  try {
+    JSONObject myData = new JSONObject(raw_string);
+    String action = myData.getString("action");
+    
+    if (action.equals("beat")) {
+      println("got beat message");
+      beat();
+    }
+    else if (action.equals("bar")) {
+      println("got bar message");
+      bar();
+    }
+    else if (action.equals("flash")) {
+      println("got flash message");
+      flash();
+    }
+    else if (action.equals("segment")) {
+      println("got segment message");
+      segment();
+    }
+    else if (action.equals("section")) {
+      println("got section message");
+      section();
+    }
+    else {
+      println("got unknown message");
+    }
+  } catch (JSONException e) {
+    println("There was an error parsing the JSONObject.");
+    println(raw_string);
+  };
+}
 
 
 void update() {
@@ -234,16 +253,50 @@ void update() {
 	impulsY = impulsY + (impulsToY - impulsY) / 30;
 
         if (myClient.available() > 0) { 
-          socketBuffer = myClient.readString(); 
-          println("recieved: "+socketBuffer);
-        } 
-	
+          socketBuffer = myClient.readString();
+          handlePacket(socketBuffer);
+//          println("recieved: "+socketBuffer);
+        }
+}
+
+void beat() {
+  pulse(stars);
+}
+
+void bar() {
+  impulsX = int(random(-width/2, width/2));
+  impulsY = int(random(-height/2, height/2));
+}
+
+void flash() {
+  white_flash(stars);
+}
+
+void segment() {
+    int r1 = floor(random(stars.length));
+    int r2 = floor(random(stars.length));
+
+    stars[r1].current_size = int(random(40));
+    stars[r2].current_size = int(random(40));
+}
+
+void section() {
+    	int f = floor(random(2));
+       	if (f==0) {
+          circle_shape(stars);
+        }
+        else if (f==1) {
+          heart(stars);
+        }
+}
+  
+  
 //	if (!window.current_track) {
-	int r1 = floor(random(stars.length));
-	int r2 = floor(random(stars.length));
-		
-	stars[r1].current_size = int(random(40));
-	stars[r2].current_size = int(random(40));
+//	int r1 = floor(random(stars.length));
+//	int r2 = floor(random(stars.length));
+//		
+//	stars[r1].current_size = int(random(40));
+//	stars[r2].current_size = int(random(40));
 //	}
 //	else {
 //		if (window.timestamp < window.current_track.end_of_fade_in) {
@@ -253,7 +306,6 @@ void update() {
 //			stars[r1].current_size = int(random(40));
 //			stars[r2].current_size = int(random(40));
 //		}
-		
 //		if ((window.beat) && (window.beat != last_beat)) {
 //			last_beat = window.beat;
 //			pulse(stars);
@@ -295,7 +347,7 @@ void update() {
 ////	}
 	
 //	resized = false;
-}
+
 
 void draw() {
 	background(0);
