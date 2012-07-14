@@ -9,26 +9,11 @@ import random
 ENAV_SERVER = ('localhost', 6500)
 LISTENING_PORT = 5000
 
-global stream
-
+stream = None
 connections = []
 
-last_segment = {}
-msgs = [
-{'action':'beat'},
-{'action':'bar'},
-{'action': 'flash'},
-{'action':'section'},
-{'action':'segment'},
-]
-
-def handle_data(data_block):
-    # send segment
-    return random.choice(msgs)
-    # whwn to send bar, beat, flash?
-    
-    
 def on_data(data):
+    global stream, connections
     for c in connections:
         try:
             c.write(data)
@@ -40,6 +25,7 @@ def handle_connection(connection, address):
     print 'opening new connection on %s:%s' % address
 
 def connection_ready(sock, fd, events):
+    global connections
     while True:
         try:
             connection, address = sock.accept()
